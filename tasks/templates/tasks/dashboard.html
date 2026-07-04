@@ -1,0 +1,86 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Task Manager</title>
+    <link rel="stylesheet" href="{% static 'tasks/style.css' %}">
+</head>
+<body>
+    <header class="topbar">
+        <h1 class="brand">Task Manager</h1>
+        <div class="topbar-right">
+            <span class="welcome-text">Welcome, {{ user.username }}</span>
+            <form method="post" action="{% url 'logout' %}" class="inline-form">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-outline">Logout</button>
+            </form>
+        </div>
+    </header>
+
+    <main class="container">
+        {% if messages %}
+            <ul class="messages">
+                {% for message in messages %}
+                    <li class="message {{ message.tags }}">{{ message }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+
+        <div class="toolbar">
+            <form method="get" class="filter-form">
+                <input type="text" name="q" placeholder="Search by title..." value="{{ search_query }}">
+                <select name="status">
+                    <option value="">All Statuses</option>
+                    {% for value, label in status_choices %}
+                        <option value="{{ value }}" {% if status_filter == value %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+                <button type="submit" class="btn btn-secondary">Filter</button>
+                <a href="{% url 'dashboard' %}" class="btn btn-outline">Reset</a>
+            </form>
+            <a href="{% url 'task_add' %}" class="btn btn-primary">+ Add Task</a>
+        </div>
+
+        <div class="task-table-wrapper">
+            <table class="task-table">
+                <thead>
+                    <tr>
+                        <th>Title</th>
+                        <th>Description</th>
+                        <th>Priority</th>
+                        <th>Status</th>
+                        <th>Due Date</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for task in tasks %}
+                    <tr>
+                        <td>{{ task.title }}</td>
+                        <td class="desc-cell">{{ task.description|default:"—" }}</td>
+                        <td><span class="badge priority-{{ task.priority|lower }}">{{ task.priority }}</span></td>
+                        <td><span class="badge status-{{ task.status|slugify }}">{{ task.status }}</span></td>
+                        <td>{{ task.due_date|default:"—" }}</td>
+                        <td class="actions-cell">
+                            <a href="{% url 'task_edit' task.pk %}" class="btn btn-small btn-secondary">Edit</a>
+                            <form method="post" action="{% url 'task_delete' task.pk %}" class="inline-form delete-form">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-small btn-danger">Delete</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="empty-row">No tasks found. Add your first task!</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </main>
+
+    <script src="{% static 'tasks/script.js' %}"></script>
+</body>
+</html>
